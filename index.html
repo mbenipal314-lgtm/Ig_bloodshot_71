@@ -85,4 +85,84 @@ footer{border-top:1px solid var(--line);padding:23px 0;color:var(--muted);font-s
   
 </main>
 <footer><div class="wrap foot"><span>© 2026 IG BLOODSHOT 71</span><span>Fan-made community website. Not affiliated with PUBG MOBILE or BGMI.</span></div></footer>
+  
+<section id="reviews" style="padding:25px 15px;margin:30px 0;background:#151923;border-radius:16px;color:white;">
+  <h2 style="text-align:center;">⭐ User Reviews</h2>
+  <p style="text-align:center;color:#aaa;">Share your experience with IG BLOODSHOT 71</p>
+
+  <form id="reviewForm">
+    <label>Your Name</label>
+    <input id="reviewName" type="text" placeholder="Enter your name" required
+      style="width:100%;padding:12px;margin:8px 0 15px;border-radius:8px;">
+
+    <label>Your Rating</label>
+    <select id="reviewRating" style="width:100%;padding:12px;margin:8px 0 15px;">
+      <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
+      <option value="4">⭐⭐⭐⭐ - Very Good</option>
+      <option value="3">⭐⭐⭐ - Good</option>
+      <option value="2">⭐⭐ - Average</option>
+      <option value="1">⭐ - Poor</option>
+    </select>
+
+    <label>Your Comment</label>
+    <textarea id="reviewComment" placeholder="Write your review..." required
+      style="width:100%;padding:12px;margin:8px 0 15px;border-radius:8px;"></textarea>
+
+    <button type="submit" style="width:100%;padding:13px;background:#e1306c;color:white;border:0;border-radius:8px;font-weight:bold;">
+      Submit Review
+    </button>
+  </form>
+
+  <h3>Recent Reviews</h3>
+  <div id="reviewList"></div>
+</section>
+
+<script>
+const form = document.getElementById("reviewForm");
+const list = document.getElementById("reviewList");
+
+function showReviews() {
+  list.replaceChildren();
+  const reviews = JSON.parse(localStorage.getItem("igReviews") || "[]");
+
+  reviews.forEach(review => {
+    const card = document.createElement("div");
+    card.style.cssText = "background:#222938;padding:14px;margin:12px 0;border-radius:10px;";
+
+    const name = document.createElement("strong");
+    name.textContent = review.name;
+
+    const rating = document.createElement("p");
+    rating.textContent = "⭐".repeat(review.rating);
+
+    const comment = document.createElement("p");
+    comment.textContent = review.comment;
+
+    card.append(name, rating, comment);
+    list.append(card);
+  });
+}
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const review = {
+    name: document.getElementById("reviewName").value.trim(),
+    rating: Number(document.getElementById("reviewRating").value),
+    comment: document.getElementById("reviewComment").value.trim()
+  };
+
+  if (!review.name || !review.comment) return;
+
+  const reviews = JSON.parse(localStorage.getItem("igReviews") || "[]");
+  reviews.unshift(review);
+
+  localStorage.setItem("igReviews", JSON.stringify(reviews));
+  form.reset();
+  showReviews();
+});
+
+showReviews();
+</script>
+  
 </body></html>
