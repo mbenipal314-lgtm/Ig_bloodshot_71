@@ -354,4 +354,18 @@ form.addEventListener("submit", function(e) {
 showReviews();
 </script>
   
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /posts/{postId} {
+      allow read: if true;
+
+      allow create, update, delete:
+        if request.auth != null
+        && request.auth.uid == "YOUR_ADMIN_UID";
+    }
+  }
+}
+  
 </body></html>
