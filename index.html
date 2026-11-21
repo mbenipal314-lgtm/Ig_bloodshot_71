@@ -83,6 +83,195 @@ footer{border-top:1px solid var(--line);padding:23px 0;color:var(--muted);font-s
   </div>
 </section>
   
+<section id="news-system">
+  <h2>🔥 IG BLOODSHOT 71 NEWS</h2>
+
+  <div id="login-box">
+    <h3>Admin Login</h3>
+    <input id="admin-email" type="email" placeholder="Admin Email">
+    <input id="admin-password" type="password" placeholder="Password">
+    <button onclick="adminLogin()">LOGIN</button>
+    <p id="login-message"></p>
+  </div>
+
+  <div id="admin-panel" hidden>
+    <h3>📝 Create New Post</h3>
+    <input id="post-title" placeholder="Post Title">
+    <input id="post-image" placeholder="Image URL">
+    <textarea id="post-description"
+      placeholder="Write your news..."></textarea>
+    <button onclick="publishPost()">PUBLISH POST</button>
+    <button onclick="adminLogout()">LOGOUT</button>
+    <p id="post-message"></p>
+  </div>
+
+  <h3>Latest BGMI / PUBG News</h3>
+  <div id="news-posts"></div>
+</section>
+
+<style>
+#news-system {
+  background:#111;
+  color:white;
+  padding:20px;
+  border-radius:12px;
+  max-width:750px;
+  margin:20px auto;
+  font-family:Arial;
+}
+#news-system input,
+#news-system textarea {
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+  padding:13px;
+  margin:10px 0;
+  background:#222;
+  color:white;
+  border:1px solid #444;
+  border-radius:7px;
+}
+#news-system textarea { min-height:120px; }
+#news-system button {
+  background:#e50914;
+  color:white;
+  padding:12px 18px;
+  border:0;
+  border-radius:7px;
+  margin:5px 0;
+  cursor:pointer;
+}
+.news-card {
+  background:#202020;
+  padding:15px;
+  margin:15px 0;
+  border-radius:10px;
+}
+.news-card img {
+  width:100%;
+  border-radius:8px;
+}
+.news-card h3 { color:#ff3333; }
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Apne Firebase Admin UID se replace karo
+const ADMIN_UID = "YOUR_ADMIN_UID";
+
+function adminLogin() {
+  const email = document.getElementById("admin-email").value;
+  const password = document.getElementById("admin-password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(error => {
+      document.getElementById("login-message").textContent =
+        error.message;
+    });
+}
+
+function adminLogout() {
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  const isAdmin = user && user.uid === ADMIN_UID;
+
+  document.getElementById("admin-panel").hidden = !isAdmin;
+  document.getElementById("login-box").hidden = !!isAdmin;
+});
+
+async function publishPost() {
+  const title = document.getElementById("post-title").value.trim();
+  const image = document.getElementById("post-image").value.trim();
+  const description =
+    document.getElementById("post-description").value.trim();
+
+  if (!auth.currentUser ||
+      auth.currentUser.uid !== ADMIN_UID) {
+    alert("Admin access required!");
+    return;
+  }
+
+  if (!title || !description) {
+    alert("Title aur description likho!");
+    return;
+  }
+
+  try {
+    await db.collection("posts").add({
+      title,
+      image,
+      description,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("post-title").value = "";
+    document.getElementById("post-image").value = "";
+    document.getElementById("post-description").value = "";
+    document.getElementById("post-message").textContent =
+      "Post Published Successfully!";
+  } catch(error) {
+    alert(error.message);
+  }
+}
+
+// Live news display
+db.collection("posts")
+  .orderBy("createdAt", "desc")
+  .onSnapshot(snapshot => {
+    const container = document.getElementById("news-posts");
+    container.replaceChildren();
+
+    snapshot.forEach(doc => {
+      const post = doc.data();
+      const card = document.createElement("article");
+      card.className = "news-card";
+
+      const heading = document.createElement("h3");
+      heading.textContent = post.title;
+      card.appendChild(heading);
+
+      if (post.image) {
+        try {
+          const url = new URL(post.image);
+          if (url.protocol === "https:" ||
+              url.protocol === "http:") {
+            const img = document.createElement("img");
+            img.src = url.href;
+            img.alt = post.title;
+            card.appendChild(img);
+          }
+        } catch(e) {}
+      }
+
+      const description = document.createElement("p");
+      description.textContent = post.description;
+      card.appendChild(description);
+
+      container.appendChild(card);
+    });
+  }, error => {
+    console.error("News loading error:", error);
+  });
+</script>
+  
 </main>
 <footer><div class="wrap foot"><span>© 2026 IG BLOODSHOT 71</span><span>Fan-made community website. Not affiliated with PUBG MOBILE or BGMI.</span></div></footer>
   
